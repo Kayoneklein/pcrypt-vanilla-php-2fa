@@ -1,0 +1,7 @@
+RewriteEngine On
+RewriteBase /php-projects/pcrypt-php/
+
+# Route everything (even .php files) to index.php
+
+RewriteCond %{REQUEST_URI} !^/php-projects/pcrypt-php/index\.php$
+RewriteRule ^ index.php [QSA,L]
