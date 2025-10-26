@@ -11,6 +11,7 @@ WORKDIR /var/www/html
 COPY . /var/www/html
 
 EXPOSE 9000
+EXPOSE 80
 CMD ["php-fpm"]
 
 
