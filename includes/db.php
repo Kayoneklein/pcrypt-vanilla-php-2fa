@@ -9,7 +9,7 @@ $dbname = "pcrypt";
 // $pdo;
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname", $user, $password);
+    $pdo = new PDO("mysql:host=$host;port=3306;dbname=$dbname", $user, $password);
     $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
     $pdo->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, true);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -17,7 +17,7 @@ try {
 
     // define('PDO', $pdo);
 } catch (PDOException $e) {
-    print_r("Connection failed: " . $e->getMessage());
+    // print_r("Connection failed: " . $e->getMessage());
     die("Connection failed: " . $e->getMessage());
 
 }
