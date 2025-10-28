@@ -1,101 +1,39 @@
-version: "3.9"
+version: "3.8"
 
 services:
-  php:
+  php-app:
     build: .
     container_name: php-app
-    volumes:
-      - .:/var/www/html
-    networks:
-      - backend
-
-  nginx:
-    image: nginx:latest
-    container_name: nginx-server
     ports:
-      - "8081:80"
+      - "8081:80" # Access your API here
     volumes:
       - .:/var/www/html
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
     depends_on:
-      - php
-    networks:
-      - backend
+      - db
 
   db:
-    image: mysql:8.0
+    image: mysql:8
     container_name: mysql-db
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: pcrypt
-      MYSQL_USER: user
-      MYSQL_PASSWORD: password
-    ports:
-      - "3306:3306"
-    networks:
-      - backend
+      MYSQL_USER: docker
+      MYSQL_PASSWORD: docker
+    volumes:
+      - db_data:/var/lib/mysql
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: phpmyadmin
+    restart: always
     ports:
-      - "8082:80"
+      - "8082:80" # Open UI at http://localhost:8082
     environment:
       PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: root
     depends_on:
       - db
-    networks:
-      - backend
 
-networks:
-  backend:
-
-
-
-
-# version: "3.8"
-
-# services:
-#   php-app:
-#     build: .
-#     ports:
-#       - "8081:80"
-#     volumes:
-#       - .:/var/www/html
-#     depends_on:
-#       - db
-#     networks:
-#       - backend
-
-#   db:
-#     image: mysql:8
-#     restart: always
-#     environment:
-#       MYSQL_ROOT_PASSWORD: "root"
-#       MYSQL_DATABASE: pcrypt
-#     volumes:
-#       - db_data:/var/lib/mysql
-#     networks:
-#       - backend
-
-#   phpmyadmin:
-#     image: phpmyadmin/phpmyadmin
-#     container_name: phpmyadmin
-#     restart: always
-#     ports:
-#       - "8082:80" # Open UI at http://localhost:8082
-#     environment:
-#       PMA_HOST: db
-#       MYSQL_ROOT_PASSWORD: root
-#     depends_on:
-#       - db
-#     networks:
-#       - backend
-
-# volumes:
-#   db_data:
-
-# networks:
-#   backend:
-#     driver: bridge
+volumes:
+  db_data:

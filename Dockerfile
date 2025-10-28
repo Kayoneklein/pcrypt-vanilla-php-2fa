@@ -1,26 +1,12 @@
-FROM php:8.2-fpm
+FROM php:8.2-apache
 
-# Install PHP extensions
-# RUN a2enmod rewrite
+# Install PDO + MySQL extension
 RUN docker-php-ext-install pdo pdo_mysql
-# RUN sed -i "s/AllowOverride None/AllowOverride All/g" /etc/apache2/apache2.conf
-# Set working directory
-WORKDIR /var/www/html
 
-# Copy source code
-COPY . /var/www/html
+# Enable mod_rewrite (if needed)
+RUN a2enmod rewrite
 
-EXPOSE 9000
-EXPOSE 80
-CMD ["php-fpm"]
+RUN sed -i "s/AllowOverride None/AllowOverride All/g" /etc/apache2/apache2.conf
 
-
-# FROM php:8.2-apache
-
-# RUN a2enmod rewrite
-
-# RUN docker-php-ext-install pdo pdo_mysql
-# RUN sed -i "s/AllowOverride None/AllowOverride All/g" /etc/apache2/apache2.conf
-
-# # Copy code into the container
-# COPY . /var/www/html/
+# Copy app files
+COPY . /var/www/html/

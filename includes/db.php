@@ -6,7 +6,6 @@ $user = "root";
 $password = "root";
 // $password = "";
 $dbname = "pcrypt";
-// $pdo;
 
 try {
     $pdo = new PDO("mysql:host=$host;port=3306;dbname=$dbname", $user, $password);
