@@ -1,11 +1,9 @@
 <?php
 
-$host = "db";
-// $host = "localhost";
-$user = "root";
-$password = "root";
-// $password = "";
-$dbname = "pcrypt";
+$host = getenv('DB_HOST');
+$user = getenv('DB_USER');
+$password = getenv('DB_PASSWORD');
+$dbname = getenv('DB_NAME');
 
 try {
     $pdo = new PDO("mysql:host=$host;port=3306;dbname=$dbname", $user, $password);
