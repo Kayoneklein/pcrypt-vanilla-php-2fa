@@ -5,14 +5,14 @@ class EncryptData
     public $public_key;
     public $server_url;
     public $device_id;
-    public $id; // this is the user id
+    public $user_id;
     public $device_token;
     public $server_id;
     public $timestamp;
     public $is_mobile_device;
 
     public function __construct(
-        $id,
+        $user_id,
         $server_url,
         $device_id,
         $public_key,
@@ -21,7 +21,7 @@ class EncryptData
         $device_token,
         $is_mobile_device
     ) {
-        $this->id = $id;
+        $this->user_id = $user_id;
         $this->server_url = $server_url;
         $this->device_id = $device_id;
         $this->public_key = $public_key;
@@ -41,7 +41,7 @@ class EncryptData
         $decoded = json_decode($data);
 
         return new EncryptData(
-            $decoded->id,
+            $decoded->user_id,
             $decoded->server_url,
             $decoded->device_id,
             $decoded->public_key,

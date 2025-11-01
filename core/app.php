@@ -29,6 +29,8 @@ require_once CORE_PATH . DS . 'utils.php';
 // APP MODELS PATH START
 require_once MODEL_PATH . DS . 'user_model.php';
 require_once MODEL_PATH . DS . 'encrypt_data.php';
+require_once MODEL_PATH . DS . 'session_model.php';
+require_once MODEL_PATH . DS . 'two_fa_model.php';
 // APP MODELS PATH END
 
 // V1 PATH START

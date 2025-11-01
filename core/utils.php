@@ -53,14 +53,24 @@ function protectRoute()
         http_response(401, 'Unauthorized to access this resource');
     }
 
-    $token = str_replace('Bearer ', '', $headers['Authorization']);
-    $data = verifyJwtToken($token);
+    global $pdo;
+    $session = new UserSession($pdo, null, $headers['Authorization']);
 
-    if (!$data) {
-        http_response(401, 'Invalid or expired token');
+    $user_id = $session->verify_token();
+    if ($user_id) {
+        $user = new User($pdo);
+        $user = $user->get($user_id);
+        return $user;
     }
 
-    return $data;
+    // $token = str_replace('Bearer ', '', $headers['Authorization']);
+    // $data = verifyJwtToken($token);
+
+    // if (!$data) {
+    //     http_response(401, 'Invalid or expired token');
+    // }
+
+    // return $data;
 }
 
 function generateUUIDv4(): string

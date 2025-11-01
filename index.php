@@ -1,8 +1,11 @@
 <?php
 require_once 'core/app.php';
 
-$STATIC_V1_PATH = '/api/v1';
+
+// $STATIC_V1_PATH = '/api/v1';
 // $STATIC_V1_PATH = '/php-projects/pcrypt-php/api/v1';
+$STATIC_LOCAL_PATH = '/php-projects/pcrypt-php';
+$STATIC_V1_PATH = '/api/v1';
 
 
 // Get the requested path
@@ -19,6 +22,7 @@ $BODY = $req->body;
 $URI = str_replace('.php', '', $URI);
 
 // Remove leading /php-projects/pcrypt-php/api/v1
+$URI = str_replace($STATIC_LOCAL_PATH, '', $URI);
 $URI = str_replace($STATIC_V1_PATH, '', $URI);
 
 ///Filter out the query parameters from the request uri
@@ -104,7 +108,7 @@ switch ($RESOURCE_PATH) {
                 $is_valid_url = true;
                 $user = User::fromAssoc($AUTH_USER);
 
-                $twoFaController->activate($user, $BODY);
+                $twoFaController->activate($BODY, $user->id);
                 break;
             }
 

@@ -6,15 +6,16 @@ class User extends DbConnection
     public $name;
     public $email;
     public $password;
-    public $public_key;
-    public $server_url;
-    public $device_id;
-    public $server_id;
+    // public $public_key;
+    // public $server_url;
+    // public $device_id;
+    // public $server_id;
+    // public $is_mobile_device;
+    // public $device_token;
+    // public $timestamp;
     public $created_at;
     public $updated_at;
-    public $is_mobile_device;
-    public $device_token;
-    public $timestamp;
+
 
     ///PRIVATE FUNCTIONS START
     private function create_user_object_validated(): bool
@@ -64,6 +65,11 @@ class User extends DbConnection
         VALUES (?, ?, ?, ?, ?)"
         );
         $stmt->execute([$this->email, $hashedPassword, $this->name, $this->created_at, $this->updated_at]);
+        $user_id = $this->conn->lastInsertId();
+
+
+        $session = new UserSession($this->conn, $user_id, null);
+        $session->save();
 
         $this->login();
     }
@@ -74,7 +80,7 @@ class User extends DbConnection
             http_response(400, 'Email and password are required');
         }
         $stmt = $this->conn->prepare("SELECT 
-        id, email, password, name, public_key, device_id, server_id, server_url
+        id, email, password, name
         FROM " .
             DBTables::$users .
             " WHERE email = ?"
@@ -93,20 +99,26 @@ class User extends DbConnection
         $this->email = $user['email'];
         $this->name = $user['name'];
         $this->id = $user['id'];
-        $this->public_key = $user['public_key'];
-        $this->device_id = $user['device_id'];
-        $this->server_id = $user['server_id'];
-        $this->server_url = $user['server_url'];
+        // $this->public_key = $user['public_key'];
+        // $this->device_id = $user['device_id'];
+        // $this->server_id = $user['server_id'];
+        // $this->server_url = $user['server_url'];
 
         unset($user['password']);
 
-        $token = generateJwtToken([
-            'user_id' => $this->id,
-            'email' => $this->email,
-            'device_id' => $this->device_id,
-            'server_id' => $this->server_id,
-            'server_url' => $this->server_url,
-        ]);
+        $session = new UserSession($this->conn, $this->id, null);
+        $token = $session->get_token();
+
+        // $token = generateJwtToken([
+        //     'user_id' => $this->id,
+        //     'email' => $this->email,
+        //     'device_id' => $this->device_id,
+        //     'server_id' => $this->server_id,
+        //     'server_url' => $this->server_url,
+        // ]);
+        if (!$token) {
+            http_response(400, 'Session token not active');
+        }
 
         http_response(200, [
             'access_token' => $token,
@@ -114,8 +126,17 @@ class User extends DbConnection
         ]);
     }
 
-    public function get()
+    public function get($id)
     {
+        $stmt = $this->conn->prepare(
+            "SELECT * FROM " .
+            DBTables::$users .
+            " WHERE id = ?"
+        );
+        $stmt->execute([$id]);
+        $user = $stmt->fetch();
+        unset($user['password']);
+        return $user;
     }
 
     public function update(array $data)
@@ -169,15 +190,15 @@ class User extends DbConnection
         $user->email = $user_assoc['email'] ?? null;
         $user->id = $user_assoc['id'] ?? $user_assoc['user_id'] ?? null;
         $user->name = $user_assoc['name'] ?? null;
-        $user->public_key = $user_assoc['public_key'] ?? null;
-        $user->device_id = $user_assoc['device_id'] ?? null;
-        $user->server_id = $user_assoc['server_id'] ?? null;
-        $user->server_url = $user_assoc['server_url'] ?? null;
+        // $user->public_key = $user_assoc['public_key'] ?? null;
+        // $user->device_id = $user_assoc['device_id'] ?? null;
+        // $user->server_id = $user_assoc['server_id'] ?? null;
+        // $user->server_url = $user_assoc['server_url'] ?? null;
         $user->created_at = $user_assoc['created_at'] ?? null;
         $user->updated_at = $user_assoc['updated_at'] ?? null;
-        $user->is_mobile_device = $user_assoc['is_mobile_device'] ?? null;
-        $user->device_token = $user_assoc['device_token'] ?? null;
-        $user->timestamp = $user_assoc['timestamp'] ?? null;
+        // $user->is_mobile_device = $user_assoc['is_mobile_device'] ?? null;
+        // $user->device_token = $user_assoc['device_token'] ?? null;
+        // $user->timestamp = $user_assoc['timestamp'] ?? null;
 
         return $user;
     }

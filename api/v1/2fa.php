@@ -28,12 +28,9 @@ class TwoFaController
         return true;
     }
 
-    public function activate(User $user, $payload)
+    public function activate($payload, $userId)
     {
-        ///Users that already have deviceId on the database has already activated 2FA. So they do not get to do activate it again
-        if ($user->device_id !== null) {
-            http_response(400, '2FA is active on this account');
-        }
+
 
         if (!isset($payload['payload'])) {
             http_response(400, 'Invalid activation payload');
@@ -44,8 +41,7 @@ class TwoFaController
          * The payload is decrypted using the security service provider.
          * This returns a json encoded string of the device parameters passed from the frontend
          */
-
-        // $decrypted = $this->securityService->decrypt($payload['payload']);
+        $decrypted = $this->securityService->decrypt($payload['payload']);
 
 
         /**
@@ -53,25 +49,24 @@ class TwoFaController
          * The json encoded string which was decrypted is decoded or deserialized into the EncryptData object
          * The EncryptData object is in the path: /app/Interfaces/EncryptData.php
          */
-
-        // $data = EncryptData::deserialize($decrypted);
+        $data = EncryptData::deserialize($decrypted);
+        // $data = $payload['payload'];
 
         /**
          * @var mixed
-         * Further mapping of the $payload is done to include the server generated values
+         * Ensure all the valid parameters for 2fa is in the payload
          */
-        $data = $payload['payload'];
-
         $this->validate_2fa_request($data);
-        $payload = [
-            'public_key' => $data['public_key'],
-            'server_url' => $data['server_url'],
-            'device_id' => $data['device_id'],
-            'device_token' => $data['device_token'],
-            'is_mobile_device' => $data['is_mobile_device'],
-            'timestamp' => date('Y-m-d H:i:s'),
-            'server_id' => generateUUIDv4(),
-        ];
+
+        // $payload = [
+        //     'public_key' => $data['public_key'],
+        //     'server_url' => $data['server_url'],
+        //     'device_id' => $data['device_id'],
+        //     'device_token' => $data['device_token'],
+        //     'is_mobile_device' => $data['is_mobile_device'],
+        //     'timestamp' => date('Y-m-d H:i:s'),
+        //     'server_id' => generateUUIDv4(),
+        // ];
 
         // $payload = [
         //     'public_key' => $data->public_key,
@@ -83,45 +78,76 @@ class TwoFaController
         //     'server_id' => generateUUIDv4(),
         // ];
 
-        ///The user collection on the database is thus updated with the new values
-        $updated = $user->update($payload);
+        ///Save the data on the two_fa table of the database
+        global $pdo;
+        $two_fa = new TwoFAModel($pdo, $userId);
+        $twoFa = $two_fa->activate($data);
 
-        if ($updated && $updated['status']) {
-            // $privateKeyEncoded = getenv("PRIVATE_SIGNATURE_KEY_OPEN_SSL");
-            // $privateKeyString = base64_decode($privateKeyEncoded);
-            // $privateKeyResource = openssl_pkey_get_private($privateKeyString);
-
-            // openssl_sign($serialize, $signature, $privateKeyResource);
-
-
-            // $data->server_id = $payload['server_id'];
-            // $data->timestamp = $payload['timestamp'];
-            // $data->id = $user->id;
-
-            $data['server_id'] = $payload['server_id'];
-            $data['timestamp'] = $payload['timestamp'];
-            $data['id'] = $user->id;
-
+        if ($twoFa) {
             /**
              * @var mixed
              * The updated $data object is json encoded to convert it into a string.
              */
-            // $serialize = $data->serialize();
+            $data = new EncryptData(
+                $twoFa['user_id'],
+                $twoFa['server_url'],
+                $twoFa['device_id'],
+                $twoFa['public_key'],
+                $twoFa['server_id'],
+                $twoFa['timestamp'],
+                $twoFa['device_token'],
+                $twoFa['is_mobile_device'],
+
+            );
+            $serialize = $data->serialize();
 
             /**
              * @var mixed
              * The json encoded string is then encrypted before it is sent to the client
              */
-            // $encrypt = $this->securityService->encrypt($serialize);
-
-            http_response(200, $data);
-            // http_response(200, $encrypt);
-
+            $encrypt = $this->securityService->encrypt($serialize);
+            http_response(200, $encrypt);
         }
 
         http_response(400, 'An error occurred. Try again');
     }
-    public static function change_device(User $user)
+    public function change_device($payload, $userId)
     {
+        $decrypted = $this->securityService->decrypt($payload['payload']);
+        $data = EncryptData::deserialize($decrypted);
+
+        $this->validate_2fa_request($data);
+
+        global $pdo;
+        $two_fa = new TwoFAModel($pdo, $userId);
+        $twoFa = $two_fa->change_device($data);
+
+        if ($twoFa) {
+            /**
+             * @var mixed
+             * The updated $data object is json encoded to convert it into a string.
+             */
+            $data = new EncryptData(
+                $twoFa['user_id'],
+                $twoFa['server_url'],
+                $twoFa['device_id'],
+                $twoFa['public_key'],
+                $twoFa['server_id'],
+                $twoFa['timestamp'],
+                $twoFa['device_token'],
+                $twoFa['is_mobile_device'],
+
+            );
+            $serialize = $data->serialize();
+
+            /**
+             * @var mixed
+             * The json encoded string is then encrypted before it is sent to the client
+             */
+            $encrypt = $this->securityService->encrypt($serialize);
+            http_response(200, $encrypt);
+        }
+
+        http_response(400, 'An error occurred. Try again');
     }
 }
